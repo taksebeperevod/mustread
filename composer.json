@@ -1,0 +1,25 @@
+{
+    "name": "top-books",
+    "type": "project",
+    "description": "",
+    "authors": [
+        {
+            "name": "Sergey Bondar",
+            "email": "msnre@ya.ru"
+        }
+    ],
+    "autoload": {
+         "psr-4": { "Msnre\\Parser\\": "parser/" }
+     },
+    "require": {
+        "php": ">=5.4",
+
+        "sleeping-owl/apist": "1.*"
+
+    },
+    "require-dev": {
+    },
+    "config": {
+        "vendor-dir": "vendor"
+    }
+}
