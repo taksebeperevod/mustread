@@ -9,7 +9,7 @@ set_time_limit(0);
 //Header('Content-Type: application/json; charset=utf8');
 Header('Content-Type: text/html; charset=utf8');
 
-$parser = new MainParser();
+$parser = new ParserQueue();
 $result = $parser->getHugo();
 
 echo json_encode($result, JSON_UNESCAPED_UNICODE);

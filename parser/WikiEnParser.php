@@ -8,7 +8,7 @@ use SleepingOwl\Apist\Apist;
 /**
  * @author Sergey Bondar
  */
-class EnWikiParser extends AbstractParser
+class WikiEnParser extends AbstractParser
 {
     /**
      * @return string
@@ -23,6 +23,7 @@ class EnWikiParser extends AbstractParser
      */
     public function getHugo($categories)
     {
+        //TODO Best All-Time Series	1966	Series of works
         $cats = [
             'Novel' => '/wiki/Hugo_Award_for_Best_Novel',
             'Novella' => '/wiki/Hugo_Award_for_Best_Novella',
@@ -74,6 +75,9 @@ class EnWikiParser extends AbstractParser
                         } else {
                             $name = $nameEl->children()->eq($nameEl->children()->count() - 1)->text();
                         }
+                        if(preg_match('/Mule/', $name)) {
+                            $name = str_replace('Mule !', '', $name);
+                        }
                         $name = $this->trimQuotes($this->stripTrim($name));
 
                         return [
@@ -82,7 +86,7 @@ class EnWikiParser extends AbstractParser
                             'category' => $category,
                             'author' => $td->eq(1 + $offset)->children()->eq(1)->text(),
                             'name' => $name,
-                            'publisher' => $td->eq(3 + $offset)->text()
+                            'publisher' => trim(preg_replace('/!.+/', '', $td->eq(3 + $offset)->text()))
                         ];
                     }
                 )

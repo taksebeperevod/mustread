@@ -8,7 +8,7 @@ use SleepingOwl\Apist\Apist;
 /**
  * @author Sergey Bondar
  */
-class RuWikiParser extends AbstractParser
+class WikiRuParser extends AbstractParser
 {
     /**
      * @return string
@@ -45,6 +45,7 @@ class RuWikiParser extends AbstractParser
                                 $row = $this->cleanParenthis( $node->html() );
 
                                 $row = str_replace('Арлекин!', 'Арлекин!»', $row);
+                                $row = str_replace('Frank Riley,', '', $row);
 
                                 $row = explode("<br>", $row);
                                 $en = array();
@@ -58,6 +59,7 @@ class RuWikiParser extends AbstractParser
                                         $en = explode(",", $row[2], 2);
                                     }
                                 }
+
                                 $book = [
                                     'nomination' => $i + 1,
                                     'year' => $year,
@@ -116,6 +118,15 @@ class RuWikiParser extends AbstractParser
 
                 //$this->recursiveAlarmIssue($rawBook);
 
+                //RU wiki is sucks
+                if ($rawBook['en']['name'] == 'They’d Rather Be Right') {
+                    $rawBook['en']['name'] = 'The Forever Machine';
+                }
+                if ($rawBook['en']['name'] == '… And Call Me Conrad') {
+                    $rawBook['en']['name'] = 'This Immortal';
+                }
+
+
                 $book = [
                     'category' => $rawBook['nomination'],
                     'year' => $rawBook['year'],
@@ -127,6 +138,7 @@ class RuWikiParser extends AbstractParser
             }
         }
 
+        //RU wiki is sucks
         $result['books'][] = [
             'category' => 1,
             'year' => 2010,
@@ -135,8 +147,8 @@ class RuWikiParser extends AbstractParser
               'author' => 'Город и город'
             ],
             'en' => [
-                'name' => 'China Mieville',
-                'author' => 'The City & the City'
+                'name' => 'The City & the City',
+                'author' => 'China Miéville'
             ]
         ];
 
