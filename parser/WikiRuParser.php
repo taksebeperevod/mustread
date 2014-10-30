@@ -88,7 +88,7 @@ class WikiRuParser extends AbstractParser
     }
 
     /**
-     * @param array $hugo
+     * @param array
      * @return array
      */
     protected function prepareHugo($hugo) {

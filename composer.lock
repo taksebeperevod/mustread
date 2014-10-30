@@ -4,7 +4,7 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "62902c8d7812e800cdf25d99748e88c5",
+    "hash": "7127101c6584bb71d50cc17b7c412235",
     "packages": [
         {
             "name": "guzzlehttp/guzzle",
@@ -210,16 +210,16 @@
         },
         {
             "name": "sleeping-owl/apist",
-            "version": "1.2.0",
+            "version": "1.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sleeping-owl/apist.git",
-                "reference": "6fd09921465e404258edd9117b57ae4c26d2b6f3"
+                "reference": "aa6be45e0aaf291bf09cff02da390220dbc62260"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sleeping-owl/apist/zipball/6fd09921465e404258edd9117b57ae4c26d2b6f3",
-                "reference": "6fd09921465e404258edd9117b57ae4c26d2b6f3",
+                "url": "https://api.github.com/repos/sleeping-owl/apist/zipball/aa6be45e0aaf291bf09cff02da390220dbc62260",
+                "reference": "aa6be45e0aaf291bf09cff02da390220dbc62260",
                 "shasum": ""
             },
             "require": {
@@ -255,7 +255,7 @@
                 "api",
                 "crawler"
             ],
-            "time": "2014-10-25 09:32:53"
+            "time": "2014-10-30 15:39:04"
         },
         {
             "name": "symfony/css-selector",

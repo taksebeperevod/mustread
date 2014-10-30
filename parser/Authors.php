@@ -253,7 +253,7 @@ class Authors
     ];
 
     /**
-     * @param mixed &$collection
+     * @param &mixed
      * @return mixed
      */
     public function fixAuthors(&$collection) {
@@ -282,7 +282,7 @@ class Authors
     }
 
     /**
-     * @param mixed $collection
+     * @param mixed
      * @return mixed
      */
     public function collectAuthors($collection) {

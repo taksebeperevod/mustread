@@ -32,7 +32,7 @@ class ParserQueue
     }
 
     /**
-     * @param string $title
+     * @param string
      * @return string
      */
     protected function prepareBookTitle($title) {
@@ -55,8 +55,8 @@ class ParserQueue
     }
 
     /**
-     * @param array $a
-     * @param array $b
+     * @param array
+     * @param array
      * @return bool
      */
     protected function isSameBook($a, $b) {

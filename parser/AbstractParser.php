@@ -18,7 +18,16 @@ abstract class AbstractParser extends Apist
     const DEBUG = true;
 
     /**
-     * @param string $text
+     * @param array
+     * @constructor
+     */
+    public function __construct($options = []) {
+        $this->setSuppressExceptions(false);
+        parent::__construct($options);
+    }
+
+    /**
+     * @param string
      * @return string
      */
     protected function cleanParenthis($text) {
@@ -28,7 +37,7 @@ abstract class AbstractParser extends Apist
     }
 
     /**
-     * @param string $text
+     * @param string
      * @return string
      */
     protected function extractParenthis($text) {
@@ -37,7 +46,7 @@ abstract class AbstractParser extends Apist
     }
 
     /**
-     * @param string $text
+     * @param string
      * @return string
      */
     protected function stripTrim($text) {
@@ -49,7 +58,7 @@ abstract class AbstractParser extends Apist
     }
 
     /**
-     * @param string $text
+     * @param string
      * @return string
      */
     protected function trimQuotes($text) {
@@ -58,8 +67,8 @@ abstract class AbstractParser extends Apist
     }
 
     /**
-     * @param mixed $value
-     * @param string $key
+     * @param mixed
+     * @param string
      */
     protected function recursiveAlarmIssue($value, $key = null, $source = null) {
         if (!self::DEBUG) {
@@ -95,9 +104,9 @@ abstract class AbstractParser extends Apist
     }
 
     /**
-     * @param string $message
-     * @param mixed $a
-     * @param mixed $b
+     * @param string
+     * @param mixed
+     * @param mixed
      */
     protected function alarmIssue($message, $a, $b = null) {
         if (!self::DEBUG) {
