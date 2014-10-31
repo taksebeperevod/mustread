@@ -53,6 +53,7 @@ abstract class AbstractParser extends Apist
         $text = strip_tags($text);
         $text = preg_replace('/\[\d+\]/', '', $text);
         $text = preg_replace('/\s+/', ' ', $text);
+        $text = str_replace('’', '\'', $text);
         $text = trim($text);
         return $text;
     }
@@ -62,61 +63,27 @@ abstract class AbstractParser extends Apist
      * @return string
      */
     protected function trimQuotes($text) {
-        $text = preg_replace('/^("|&quot;)(.+)("|&quot;)$/', '$2', $text);
+        $text = preg_replace('/^("|&quot;|«)(.+)("|&quot;|»)$/', '$2', $text);
         return $text;
     }
 
     /**
-     * @param mixed
+     * @param array
+     * @param array
      * @param string
+     * @return array
      */
-    protected function recursiveAlarmIssue($value, $key = null, $source = null) {
-        if (!self::DEBUG) {
-            return;
-        }
-        if (is_array($value)) {
-            foreach ($value as $currentKey => $o) {
-                $newKey = $key . ' ' . $currentKey;
-                $this->recursiveAlarmIssue($o, $newKey, $source ?: $value);
+    protected function mapCategoryUrls($categories, $cats, $postfix) {
+        $urls = [];
+        foreach ($categories as $key => $value) {
+            $value = (object) $value;
+            if (!isset($cats[$value->$postfix])) {
+                continue;
             }
-            return;
+            $urls[$key] = $cats[$value->$postfix];
         }
 
-        if (empty($value)) {
-            $this->alarmIssue('empty ' . $key, $source);
-        }
-
-        if (preg_match('/\n/', $value)) {
-            $this->alarmIssue('break line ' . $key, $value, $source);
-        }
-
-        if (preg_match('/[()\[\]]/', $value)) {
-            $this->alarmIssue('parenthis ' . $key, $value, $source);
-        }
-
-//        if (preg_match('/name/', $key) AND preg_match('/[^A-Za-z,.:-!?]/', $value)) {
-//            $this->alarmIssue('comm! ' . $key, $value, $source);
-//        }
-
-        if (preg_match('/name/', $key) AND strlen($value) < 3) {
-            $this->alarmIssue('too short ' . $key, $value, $source);
-        }
-    }
-
-    /**
-     * @param string
-     * @param mixed
-     * @param mixed
-     */
-    protected function alarmIssue($message, $a, $b = null) {
-        if (!self::DEBUG) {
-            return;
-        }
-        echo '<h1>' . $message . ' </h1>';
-        var_dump($a);
-        if ($b) {
-            var_dump($b);
-        }
+        return $urls;
     }
 
 }

@@ -17,6 +17,7 @@ class WikiEnParser extends AbstractParser
     {
         return 'https://en.wikipedia.org';
     }
+
     /**
      * @param array
      * @return array
@@ -31,34 +32,48 @@ class WikiEnParser extends AbstractParser
             'Short story' => '/wiki/Hugo_Award_for_Best_Short_Story'
         ];
 
-        $urls = [];
-        foreach ($categories as $key => $value) {
-            if (!isset($cats[$value->en])) {
-                continue;
-            }
-            $urls[$key] = $cats[$value->en];
-        }
+        $urls = $this->mapCategoryUrls($categories, $cats, 'en');
+        return $this->getCategories($urls);
+    }
 
-        $hugo = array();
+    /**
+     * @param array
+     * @return array
+     */
+    public function getNebula($categories)
+    {
+        $cats = [
+            'Novel' => '/wiki/Nebula_Award_for_Best_Novel',
+            'Novella' => '/wiki/Nebula_Award_for_Best_Novella',
+            'Novellette' => '/wiki/Nebula_Award_for_Best_Novelette',
+            'Short story' => '/wiki/Nebula_Award_for_Best_Short_Story'
+        ];
 
-        foreach ($urls as $category => $url) {
-            $hugo = array_merge($hugo, $this->getHugoCategory($url, $category));
-        }
-
-        return $hugo;
+        $urls = $this->mapCategoryUrls($categories, $cats, 'en');
+        return $this->getCategories($urls);
     }
 
 
+    protected function getCategories($urls) {
+        $books = [];
+
+        foreach ($urls as $category => $url) {
+            $parsed = $this->getWikiCategory($url, $category);
+            $books = array_merge($books, $parsed);
+        }
+
+        return $books;
+    }
 
     /**
      * @param string
      * @param int
      * @return array
      */
-    public function getHugoCategory($url, $category)
+    public function getWikiCategory($url, $category)
     {
         $parsed = $this->get($url, [
-            'hugo' => Apist::filter('.wikitable')->each([
+            'award' => Apist::filter('.wikitable')->each([
                 'books' => Apist::filter('tr')->each(function (Crawler $node, $i) use ($category) {
                         $style = $node->attr('style');
 
@@ -80,6 +95,10 @@ class WikiEnParser extends AbstractParser
                         }
                         $name = $this->trimQuotes($this->stripTrim($name));
 
+                        if ($td->eq(1 + $offset)->text() == '(no award)+') {
+                            return null;
+                        }
+
                         return [
                             'isWinner' => $style && preg_match('/background/', $style),
                             'year' => $td->eq(0)->children()->eq(1)->text(),
@@ -93,16 +112,16 @@ class WikiEnParser extends AbstractParser
             ])
         ]);
 
-        return $this->prepareHugo($parsed);
+        return $this->prepare($parsed);
     }
 
     /**
      * @param array
      * @return array
      */
-    protected function prepareHugo($hugo) {
+    protected function prepare($collection) {
         $result = [];
-        foreach($hugo['hugo'] as $h) {
+        foreach($collection['award'] as $h) {
             foreach ($h['books'] as $book) {
                 if (!$book) {
                     continue;

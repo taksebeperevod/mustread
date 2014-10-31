@@ -17,6 +17,135 @@ class WikiRuParser extends AbstractParser
     {
         return 'http://ru.wikipedia.org';
     }
+
+    /**
+     * @param array
+     * @return array
+     */
+    public function getNebula($categories)
+    {
+        $cats = [
+            'Роман' => '/wiki/Премия_«Небьюла»_за_лучший_роман',
+            'Повесть' => '/wiki/Премия_«Небьюла»_за_лучшую_повесть',
+            'Короткая повесть' => '/wiki/Премия_«Небьюла»_за_лучшую_короткую_повесть',
+            'Рассказ' => '/wiki/Премия_«Небьюла»_за_лучший_рассказ'
+        ];
+
+        $urls = $this->mapCategoryUrls($categories, $cats, 'ru');
+        $books = [];
+
+        foreach ($urls as $category => $url) {
+            $parsed = $this->getNebulaCategory($url, $category);
+            $books = array_merge($books, $parsed);
+        }
+
+        return $books;
+    }
+
+    /**
+     * @param string
+     * @param int
+     * @return array
+     */
+    protected function getNebulaCategory($url, $category) {
+
+        $parsed = $this->get($url, [
+            'award' => Apist::filter('.wikitable')->each([
+                'books' => Apist::filter('tr')->each(function (Crawler $node, $i) use ($category) {
+                        $td = $node->children();
+                        if ($category == 1) {
+                            $offset = ($td->count() == 2) ? 0 : 2;
+                            $yearColumns = 4;
+                        } else {
+                            $offset = ($td->count() == 4) ? 0: 2;
+                            $yearColumns = 6;
+                        }
+
+                        $author = $td->eq($offset);
+                        $ruName = $td->eq($offset + 1);
+
+                        if (trim($author->text()) == 'Победители и финалисты') {
+                            return null;
+                        }
+
+                        $currentKey = 0;
+                        $possibleYears = $node->previousAll();
+                        $yearTd = $td;
+                        while ($yearTd->count() != $yearColumns) {
+                            $yearTd = $possibleYears->eq($currentKey)->children();
+                            $currentKey++;
+                        }
+
+                        $year = $yearTd->children()->eq(0)->text();
+                        $year = $this->stripTrim($year);
+
+                        $style = $ruName->attr('style');
+
+                        $author = $this->stripTrim($author->html());
+                        //no co-authors!
+                        $author = preg_replace('/,.+$/', '', $author);
+                        $author = $this->trimQuotes($author);
+
+                        $enName = null;
+
+                        if ($ruName->children()->count()) {
+                            $ruName = $ruName->children()->eq(0);
+                            if ($ruName->children()->count()) {
+                                $ruName = $ruName->children()->eq(0);
+                            }
+                        }
+
+                        $ruName = $this->stripTrim($ruName->html());
+                        $ruName = str_replace('»/«', '', $ruName);
+                        $ruName = $this->trimQuotes($ruName);
+                        if (!preg_match('/[А-Яа-я]/u', $ruName) AND preg_match('/[A-Za-z]/', $ruName)) {
+                            $enName = $ruName;
+                            $ruName = null;
+                        }
+                        if (preg_match('/^[A-Za-z]+$/', $ruName)) {
+                            $enName = $ruName;
+                        }
+
+                        return [
+                            'ru' => [
+                                'author' => $author,
+                                'name' => $ruName,
+                            ],
+                            'en' => [
+                                'author' => null,
+                                'name' => $enName
+                            ],
+                            'year' => $year,
+                            'category' => $category,
+                            'isWinner' => $style && preg_match('/background/', $style)
+                        ];
+                })
+            ])
+        ]);
+
+        $books = $this->prepareNebula($parsed);
+
+        return $books;
+    }
+
+    /**
+     * @param array
+     * @return array
+     */
+    protected function prepareNebula($collection) {
+        $result = [];
+        foreach($collection['award'] as $h) {
+            foreach ($h['books'] as $book) {
+                if (!$book) {
+                    continue;
+                }
+
+                $result[] = $book;
+            }
+        }
+
+        return $result;
+    }
     
     /**
      * @return array
@@ -48,7 +177,7 @@ class WikiRuParser extends AbstractParser
                                 $row = str_replace('Frank Riley,', '', $row);
 
                                 $row = explode("<br>", $row);
-                                $en = array();
+                                $en = [];
 
                                 if (isset($row[2])) {
                                     if (isset($row[3]) && $row[3]) {

@@ -20,9 +20,9 @@ class Cache
      * @param string
      * @param callable
      */
-    public function __construct($name, callable $function) {
+    public function __construct($name, callable $function = null) {
         $this->filename = __DIR__ . $this->path . $name . '.json';
-        if (!$this->isSaved($name)) {
+        if (!$name || !$this->isSaved($name)) {
             $data = $function();
             $this->save($data);
         }
