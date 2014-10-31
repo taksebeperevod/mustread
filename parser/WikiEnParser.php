@@ -33,10 +33,10 @@ class WikiEnParser extends AbstractParser
 
         $urls = [];
         foreach ($categories as $key => $value) {
-            if (!isset($cats[$value['en']])) {
+            if (!isset($cats[$value->en])) {
                 continue;
             }
-            $urls[$key] = $cats[$value['en']];
+            $urls[$key] = $cats[$value->en];
         }
 
         $hugo = array();

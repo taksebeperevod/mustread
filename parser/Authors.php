@@ -258,11 +258,14 @@ class Authors
      */
     public function fixAuthors(&$collection) {
         foreach ($collection as $key => $h) {
+            if (!$h->ru || !$h->ru->author) {
+                continue;
+            }
             //and clean up russian authors
-            $ruA = $h['ru']['author'];
+            $ruA = $h->ru->author;
 
             $ruA = preg_replace('/([А-Я][а-я]+)\s[А-Я]\.\s([А-Я][а-я]+)/u', '$1 $2', $ruA);
-            $collection[$key]['ru']['author'] = $ruA;
+            $collection[$key]->ru->author = $ruA;
         }
     }
 
@@ -290,14 +293,14 @@ class Authors
 
         //use same authors
         foreach ($collection as $key => $h) {
-            if (!$h['ru']['author']) {
+            if (!$h->ru->author) {
                 continue;
             }
 
             //and clean up russian authors
-            $enAuthor = $h['en']['author'];
+            $enAuthor = $h->en->author;
 
-            $ruA = $h['ru']['author'];
+            $ruA = $h->ru->author;
             $ruA = preg_replace('/([А-Я][а-я]+)\s[А-Я]\.\s([А-Я][а-я]+)/u', '$1 $2', $ruA);
 
             $ruAuthors[$enAuthor] = $ruA;

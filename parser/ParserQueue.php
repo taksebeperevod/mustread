@@ -32,6 +32,19 @@ class ParserQueue
     }
 
     /**
+     * @return mixed
+     */
+    public function getBooks() {
+        $self = $this;
+        $cache = new Cache('hugo', function() use ($self) {
+                return $self->getHugo();
+            });
+        $hugo = $cache->get();
+
+        return $hugo;
+    }
+
+    /**
      * @param string
      * @return string
      */
@@ -60,15 +73,15 @@ class ParserQueue
      * @return bool
      */
     protected function isSameBook($a, $b) {
-        $aName = $this->prepareBookTitle($a['name']);
-        $bName = $this->prepareBookTitle($b['name']);
+        $aName = $this->prepareBookTitle($a->name);
+        $bName = $this->prepareBookTitle($b->name);
 
         if( $aName == $bName ) {
             return true;
         }
 
-        $aAuthor = $this->prepareBookTitle($a['author']);
-        $bAuthor = $this->prepareBookTitle($b['author']);
+        $aAuthor = $this->prepareBookTitle($a->author);
+        $bAuthor = $this->prepareBookTitle($b->author);
         if ($aAuthor != $bAuthor) {
             return false;
         }
@@ -86,12 +99,12 @@ class ParserQueue
 
         if ($aFirst == $bFirst) {
             return true;
-            //echo $aFirst . " " . $bFirst . "! " . $aName . "({$a['author']})" . "=" . $bName . "({$b['author']})" . "<br><br>";
+            //echo $aFirst . " " . $bFirst . "! " . $aName . "({$a->author})" . "=" . $bName . "({$b->author})" . "<br><br>";
         }
 
         if ($aLast == $bLast) {
             return true;
-            //echo $aLast . " " . $bLast . "! " . $aName  . "({$a['author']})" . "=" . $bName . "({$b['author']})"  . "<br><br>";
+            //echo $aLast . " " . $bLast . "! " . $aName  . "({$a->author})" . "=" . $bName . "({$b->author})"  . "<br><br>";
         }
         return false;
     }
@@ -101,36 +114,45 @@ class ParserQueue
      */
     public function getHugo()
     {
+        $self = $this;
+
         $hugo = array();
 
-        $ruHugo = $this->ruWiki->getHugo();
+        $cache = new Cache('ruHugo', function() use ($self) {
+                return $self->ruWiki->getHugo();
+            });
+        $ruHugo = $cache->get();
 
-        $enHugo = $this->enWiki->getHugo($ruHugo['categories']);
+        $categories = $ruHugo->categories;
+        $cache = new Cache('enHugo', function() use ($self, $categories) {
+                return $self->enWiki->getHugo($categories);
+            });
+        $enHugo = $cache->get();
 
         foreach ($enHugo as $enKey => $en) {
-            foreach ($ruHugo['books'] as $ruKey => $ru) {
-                if ($ru['year'] != $en['year']) {
+            foreach ($ruHugo->books as $ruKey => $ru) {
+                if ($ru->year != $en->year) {
                     continue;
                 }
 
-                if($this->isSameBook($ru['en'], $en)) {
-                    $book = [
-                        'isWinner' => $en['isWinner'],
-                        'year' => intval($en['year']),
+                if($this->isSameBook($ru->en, $en)) {
+                    $book = (object) [
+                        'isWinner' => $en->isWinner,
+                        'year' => intval($en->year),
                         //RU wiki is SUCKS
-                        'category' => intval($en['category']),
-                        'ru' => $ru['ru'],
-                        'en' => [
-                            'name' => $en['name'],
-                            'author' => $en['author'],
-                            'publisher' => $en['publisher']
+                        'category' => intval($en->category),
+                        'ru' => (object) $ru->ru,
+                        'en' => (object) [
+                            'name' => $en->name,
+                            'author' => $en->author,
+                            'publisher' => $en->publisher
                         ]
                     ];
 
                     $hugo[] = $book;
 
                     unset($enHugo[$enKey]);
-                    unset($ruHugo['books'][$ruKey]);
+                    unset($ruHugo->books[$ruKey]);
                 }
             }
         }
@@ -139,25 +161,25 @@ class ParserQueue
         $this->authors->collectAuthors($hugo);
 
         foreach($enHugo as $en) {
-            $hugo[] = [
-                'isWinner' => $en['isWinner'],
-                'year' => intval($en['year']),
+            $hugo[] = (object) [
+                'isWinner' => $en->isWinner,
+                'year' => intval($en->year),
                 //RU wiki is SUCKS - 2014 & 1939
-                'category' => intval($en['category']),
-                'ru' => [
+                'category' => intval($en->category),
+                'ru' => (object) [
                     'name' => null,
-                    'author' => $this->authors->getRussianAuthor($en['author']),
+                    'author' => $this->authors->getRussianAuthor($en->author),
                 ],
-                'en' => [
-                    'name' => $en['name'],
-                    'author' => $en['author']
+                'en' => (object) [
+                    'name' => $en->name,
+                    'author' => $en->author
                 ]
             ];
         };
 
-        return [
+        return (object) [
             'books' => $hugo,
-            'categories' => $ruHugo['categories']
+            'categories' => $ruHugo->categories
         ];
     }
 
