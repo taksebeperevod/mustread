@@ -1,6 +1,6 @@
 <?php
 
-namespace Msnre\Parser;
+namespace Msnre\Parser\Parser;
 
 use Symfony\Component\DomCrawler\Crawler;
 use SleepingOwl\Apist\Apist;

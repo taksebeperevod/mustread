@@ -1,9 +1,11 @@
 <?php
 
-namespace Msnre\Parser;
+namespace Msnre\Parser\Parser;
 
 use Symfony\Component\DomCrawler\Crawler;
 use SleepingOwl\Apist\Apist;
+
+use Msnre\Parser\Helper\Alarm;
 
 /**
  * @author Sergey Bondar

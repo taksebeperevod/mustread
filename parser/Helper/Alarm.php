@@ -1,6 +1,6 @@
 <?php
 
-namespace Msnre\Parser;
+namespace Msnre\Parser\Helper;
 
 /**
  * @author Sergey Bondar

@@ -9,7 +9,7 @@ set_time_limit(0);
 //Header('Content-Type: application/json; charset=utf8');
 Header('Content-Type: text/html; charset=utf8');
 
-$parser = new ParserQueue();
+$parser = new ParserManager();
 $result = $parser->getBooks();
 
 echo json_encode($result, JSON_UNESCAPED_UNICODE);
