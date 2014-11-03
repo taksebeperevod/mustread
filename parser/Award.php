@@ -43,12 +43,52 @@ class Award
     /**
      * @return array
      */
+    public function getLocus()
+    {
+        $categories = Category::getCategories();
+
+        $ruWiki = $this->ruWiki;
+        $cache = new Cache('locusRu', function() use ($ruWiki, $categories) {
+                return $ruWiki->getLocus($categories);
+            });
+        $ruBooks = $cache->get();
+
+        $enWiki = $this->enWiki;
+        $cache = new Cache('locusEn', function() use ($enWiki, $categories) {
+                return $enWiki->getLocus($categories);
+            });
+        $enBooks = $cache->get();
+
+        $this->authors->collectAuthorsByEnTitleAndPopulate($ruBooks, $enBooks);
+
+        //TODO merge
+        $books = $ruBooks;
+
+        return (object) [
+            'title' => (object) [
+                'ru' => 'Локус',
+                'en' => 'Locus Award'
+            ],
+            'founder' => 'Locus: The magazine of the science fiction & fantasy field',
+            'site' => 'http://www.locusmag.com/',
+            'link' => (object) [
+                'ru' => 'http://ru.wikipedia.org/wiki/Локус_(премия)',
+                'en' => 'http://en.wikipedia.org/wiki/Locus_Award'
+            ],
+            'books' => $books,
+            'categories' => Category::getClarkeCategories()
+        ];
+    }
+
+    /**
+     * @return array
+     */
     public function getClarke()
     {
         $categories = Category::getCategories();
 
         $ruWiki = $this->ruWiki;
-        $cache = new Cache(null, function() use ($ruWiki, $categories) {
+        $cache = new Cache('clarkeRu', function() use ($ruWiki, $categories) {
                 return $ruWiki->getClarke($categories);
             });
         $ruBooks = $cache->get();
@@ -72,8 +112,8 @@ class Award
             'founder' => 'British Science Fiction Association',
             'site' => 'http://www.clarkeaward.com/',
             'link' => (object) [
-                'ru' => 'http://ru.wikipedia.org/wiki/%D0%9D%D0%B5%D0%B1%D1%8C%D1%8E%D0%BB%D0%B0',
-                'en' => 'http://en.wikipedia.org/wiki/Locus_Award'
+                'ru' => 'http://ru.wikipedia.org/wiki/Список_лауреатов_премии_Артура_Кларка',
+                'en' => 'http://en.wikipedia.org/wiki/Arthur_C._Clarke_Award'
             ],
             'books' => $books,
             'categories' => Category::getClarkeCategories()

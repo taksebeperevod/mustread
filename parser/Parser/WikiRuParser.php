@@ -24,6 +24,144 @@ class WikiRuParser extends AbstractParser
      * @param array
      * @return array
      */
+    public function getLocus($categories)
+    {
+        $cats = Category::getLocusRuCategories();
+
+        $books = [];
+        foreach ($cats as $category => $sets) {
+            foreach ($sets as $key => $urls) {
+                foreach ($urls as $url) {
+                    if ($key == 'pic') {
+                        $parsed = $this->parseTableWithPictures($url, $category, ['offset' => 2, 'yearColumns' => 4]);
+                        $books = array_merge($books, $parsed);
+                    } else {
+                        $parsed = $this->parseLocusTables($url, $category);
+                        $books = array_merge($books, $parsed);
+                    }
+                }
+            }
+        }
+
+        return $books;
+    }
+
+    /**
+     * @param string
+     * @param int
+     * @return array
+     */
+    public function parseLocusTables($url, $category)
+    {
+        $year = null;
+        $parsed = $this->get($url, [
+            'award' => Apist::filter('.wikitable')->each([
+                    'books' => Apist::filter('tr')->each(function (Crawler $node, $i) use ($category, $year) {
+                            static $headType;
+                            $head = $node->children()->eq(1)->text();
+                            if ($head == 'Лауреат') {
+                                $headType = 1;
+                                return null;
+                            } else if ($head == 'Роман') {
+                                $headType = 2;
+                                return null;
+                            }
+
+                            $enAuthor = null;
+                            $enName = null;
+                            $ruName = null;
+                            $ruAuthor = null;
+
+                            if ($headType == 1) {
+                                $year = $node->children()->eq(0)->text();
+
+                                $text = $node->children()->eq(1)->text();
+                                $text = explode(', ', $text);
+
+                                $name = $text[0];
+                                $author = $text[1];
+                            } else {
+                                $offset = 0;
+                                if ($node->children()->count() == 3) {
+                                    $year = $node->children()->eq(0)->text();
+                                    $offset = 1;
+                                }
+
+                                $nameEl = $node->children()->eq($offset + 0);
+                                if($nameEl->children()->count()) {
+                                    $name = $nameEl->children()->eq(0)->text();
+                                } else {
+                                    $name = $nameEl->text();
+                                }
+                                $name = $this->trimQuotes($name);
+
+                                $authorEl = $node->children()->eq($offset + 1);
+                                if($authorEl->children()->count()) {
+                                    $author = $authorEl->children()->eq(0)->text();
+                                } else {
+                                    $author = $authorEl->text();
+                                }
+                            }
+
+                            if (!preg_match('/[А-Яа-я]/u', $name) AND preg_match('/[A-Za-z]/', $name)) {
+                                $enName = $name;
+                                $ruAuthor = null;
+                            } else {
+                                $ruName = $name;
+                            }
+                            if ($ruName AND !preg_match('/[А-Яа-я]/u', $ruName) AND !preg_match('/[A-Za-z]/', $ruName)) {
+                                $enName = $ruName;
+                            }
+
+                            if (!preg_match('/[А-Яа-я]/u', $author) AND preg_match('/[A-Za-z]/', $author)) {
+                                $enAuthor = $author;
+                                $ruAuthor = null;
+                            } else {
+                                $ruAuthor = $author;
+                            }
+
+                            return [
+                                'ru' => [
+                                    'author' => $ruAuthor,
+                                    'name' => $ruName,
+                                ],
+                                'en' => [
+                                    'author' => $enAuthor,
+                                    'name' => $enName
+                                ],
+                                'year' => $year,
+                                'category' => $category,
+                                'isWinner' => true
+                            ];
+                    })
+            ])
+        ]);
+
+        return $this->prepareLocus($parsed);
+    }
+
+    /**
+     * @param array
+     * @return array
+     */
+    protected function prepareLocus($parsed)
+    {
+        $parsed = $parsed['award'][0]['books'];
+        unset($parsed[0]);
+
+        foreach ($parsed as $key => $value) {
+            $value['ru'] = (object) $value['ru'];
+            $value['en'] = (object) $value['en'];
+            $parsed[$key] = (object) $value;
+        }
+
+        return $parsed;
+    }
+
+    /**
+     * @param array
+     * @return array
+     */
     public function getClarke($categories)
     {
         $cats = Category::getClarkeRuCategories();
@@ -84,10 +222,10 @@ class WikiRuParser extends AbstractParser
                         $offset = ($td->count() == $specialRules['offset']) ? 0 : 2;
                         $yearColumns = $specialRules['yearColumns'];
 
-                        $author = $td->eq($offset);
+                        $ruAuthor = $td->eq($offset);
                         $ruName = $td->eq($offset + 1);
 
-                        if (trim($author->text()) == 'Победители и финалисты') {
+                        if (trim($ruAuthor->text()) == 'Победители и финалисты') {
                             return null;
                         }
 
@@ -106,20 +244,25 @@ class WikiRuParser extends AbstractParser
                         $style = $ruName->attr('style');
 
                         //obsolete en/ru notes
-                        if ($author->children()->count() == 1) {
-                            $author = $author->children()->eq(0);
-                            if (!$author->attr('href')) {
-                                $author = $author->children()->eq(0);
+                        if ($ruAuthor->children()->count() == 1) {
+                            $ruAuthor = $ruAuthor->children()->eq(0);
+                            if (!$ruAuthor->attr('href')) {
+                                $ruAuthor = $ruAuthor->children()->eq(0);
                             }
                         }
 
-                        $author = $this->stripTrim($author->html());
+                        $ruAuthor = $this->stripTrim($ruAuthor->html());
                         //no co-authors!
-                        $author = preg_replace('/,.+$/', '', $author);
-                        $author = $this->trimQuotes($author);
+                        $ruAuthor = preg_replace('/,.+$/', '', $ruAuthor);
+                        $ruAuthor = $this->trimQuotes($ruAuthor);
 
                         $enAuthor = null;
                         $enName = null;
+
+                        if (!preg_match('/[А-Яа-я]/u', $ruAuthor) ) {
+                            $enAuthor = $ruAuthor;
+                            $ruAuthor = null;
+                        }
 
                         //obsolete en/ru notes
                         if ($ruName->children()->count()) {
@@ -136,13 +279,13 @@ class WikiRuParser extends AbstractParser
                             $enName = $ruName;
                             $ruName = null;
                         }
-                        if (preg_match('/^[A-Za-z]+$/', $ruName)) {
+                        if ($ruName AND !preg_match('/[А-Яа-я]/u', $ruName) AND !preg_match('/[A-Za-z]/', $ruName)) {
                             $enName = $ruName;
                         }
 
                         return [
                             'ru' => [
-                                'author' => $author,
+                                'author' => $ruAuthor,
                                 'name' => $ruName,
                             ],
                             'en' => [

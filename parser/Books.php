@@ -51,7 +51,14 @@ class Books
             });
         $clarke = $cache->get();
 
-        return $clarke;
+        $cache = new Cache('locus', function() use ($manager) {
+                return $manager->getLocus();
+            });
+        $clarke = $cache->get();
+
+        $books = $clarke;
+
+        return $books;
     }
 }
 
