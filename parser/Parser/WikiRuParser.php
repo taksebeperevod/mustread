@@ -24,20 +24,44 @@ class WikiRuParser extends AbstractParser
      * @param array
      * @return array
      */
-    public function getNebula($categories)
+    public function getClarke($categories)
     {
-        $cats = [
-            'Роман' => '/wiki/Премия_«Небьюла»_за_лучший_роман',
-            'Повесть' => '/wiki/Премия_«Небьюла»_за_лучшую_повесть',
-            'Короткая повесть' => '/wiki/Премия_«Небьюла»_за_лучшую_короткую_повесть',
-            //'Рассказ' => '/wiki/Премия_«Небьюла»_за_лучший_рассказ'
-        ];
+        $cats = Category::getClarkeRuCategories();
 
         $urls = $this->mapCategoryUrls($categories, $cats, 'ru');
         $books = [];
 
         foreach ($urls as $category => $url) {
-            $parsed = $this->getNebulaCategory($url, $category);
+            //RU Wiki is sucks
+            $parsed = $this->parseTableWithPictures($url, $category, ['offset' => 3, 'yearColumns' => 6]);
+            $books = array_merge($books, $parsed);
+        }
+
+        return $books;
+    }
+
+    /**
+     * @param array
+     * @return array
+     */
+    public function getNebula($categories)
+    {
+        $cats = Category::getNebulaRuCategories();
+
+        $urls = $this->mapCategoryUrls($categories, $cats, 'ru');
+        $books = [];
+
+        foreach ($urls as $category => $url) {
+            //RU Wiki is sucks
+            if ($category == Category::ID_NOVEL) {
+                $offsetRule = 2;
+                $yearColumns = 4;
+            } else {
+                $offsetRule = 4;
+                $yearColumns = 6;
+            }
+
+            $parsed = $this->parseTableWithPictures($url, $category, ['offset' => $offsetRule, 'yearColumns' => $yearColumns]);
             $books = array_merge($books, $parsed);
         }
 
@@ -47,21 +71,18 @@ class WikiRuParser extends AbstractParser
     /**
      * @param string
      * @param int
+     * @param array
      * @return array
      */
-    protected function getNebulaCategory($url, $category) {
+    protected function parseTableWithPictures($url, $category, $specialRules) {
 
         $parsed = $this->get($url, [
             'award' => Apist::filter('.wikitable')->each([
-                'books' => Apist::filter('tr')->each(function (Crawler $node, $i) use ($category) {
+                'books' => Apist::filter('tr')->each(function (Crawler $node, $i) use ($category, $specialRules) {
                         $td = $node->children();
-                        if ($category == 1) {
-                            $offset = ($td->count() == 2) ? 0 : 2;
-                            $yearColumns = 4;
-                        } else {
-                            $offset = ($td->count() == 4) ? 0: 2;
-                            $yearColumns = 6;
-                        }
+
+                        $offset = ($td->count() == $specialRules['offset']) ? 0 : 2;
+                        $yearColumns = $specialRules['yearColumns'];
 
                         $author = $td->eq($offset);
                         $ruName = $td->eq($offset + 1);
@@ -73,6 +94,7 @@ class WikiRuParser extends AbstractParser
                         $currentKey = 0;
                         $possibleYears = $node->previousAll();
                         $yearTd = $td;
+
                         while ($yearTd->count() != $yearColumns) {
                             $yearTd = $possibleYears->eq($currentKey)->children();
                             $currentKey++;
@@ -83,13 +105,23 @@ class WikiRuParser extends AbstractParser
 
                         $style = $ruName->attr('style');
 
+                        //obsolete en/ru notes
+                        if ($author->children()->count() == 1) {
+                            $author = $author->children()->eq(0);
+                            if (!$author->attr('href')) {
+                                $author = $author->children()->eq(0);
+                            }
+                        }
+
                         $author = $this->stripTrim($author->html());
                         //no co-authors!
                         $author = preg_replace('/,.+$/', '', $author);
                         $author = $this->trimQuotes($author);
 
+                        $enAuthor = null;
                         $enName = null;
 
+                        //obsolete en/ru notes
                         if ($ruName->children()->count()) {
                             $ruName = $ruName->children()->eq(0);
                             if ($ruName->children()->count()) {
@@ -114,7 +146,7 @@ class WikiRuParser extends AbstractParser
                                 'name' => $ruName,
                             ],
                             'en' => [
-                                'author' => null,
+                                'author' => $enAuthor,
                                 'name' => $enName
                             ],
                             'year' => $year,
@@ -125,7 +157,7 @@ class WikiRuParser extends AbstractParser
             ])
         ]);
 
-        $books = $this->prepareNebula($parsed);
+        $books = $this->prepareTableWithPictures($parsed);
 
         return $books;
     }
@@ -134,13 +166,17 @@ class WikiRuParser extends AbstractParser
      * @param array
      * @return array
      */
-    protected function prepareNebula($collection) {
+    protected function prepareTableWithPictures($collection) {
         $result = [];
         foreach($collection['award'] as $h) {
             foreach ($h['books'] as $book) {
                 if (!$book) {
                     continue;
                 }
+
+                $book['ru'] = (object) $book['ru'];
+                $book['en'] = (object) $book['en'];
+                $book = (object) $book;
 
                 $result[] = $book;
             }
@@ -150,18 +186,22 @@ class WikiRuParser extends AbstractParser
     }
     
     /**
+     * @param array
      * @return array
      */
-    public function getHugo()
+    public function getHugo($categories)
     {
-        $parsed = $this->get('/wiki/%D0%A5%D1%8C%D1%8E%D0%B3%D0%BE', [
+        $settings = Category::getHugoRuCategories();
+        $categories = $settings['categories'];
+
+        $parsed = $this->get($settings['url'], [
             'hugo' => Apist::filter('table.standard')->each([
                 'genres' => Apist::filter('table.standard tr')->eq(0)->children()->each([
                         'name' => Apist::filter('*')->text()
                 ]),
                 //'years' => Apist::filter('table.standard tr')->each(Apist::filter('th')->text()),
                 'awards' => Apist::filter('table.standard tr')->each([
-                        'books' => Apist::filter('td')->each(function(Crawler $node, $i) {
+                        'books' => Apist::filter('td')->each(function(Crawler $node, $i) use ($categories) {
                                 //nomination genre
                                 //var_dump($node->parents()->parents()->filter('tr')->eq(0)->filter('th')->eq($i)->text());die();
                                 $possibleYears = $node->parents()->previousAll();
@@ -191,8 +231,10 @@ class WikiRuParser extends AbstractParser
                                     }
                                 }
 
+                                $category = $categories[$i + 1];
+
                                 $book = [
-                                    'nomination' => $i + 1,
+                                    'nomination' => $category,
                                     'year' => $year,
                                     'ru' => [
                                         'author' => $this->stripTrim($row[0]),
@@ -237,6 +279,7 @@ class WikiRuParser extends AbstractParser
             $result['categories'][$i+1] = [
                 'ru' => $this->stripTrim($vars[0]),
                 'en' => $this->stripTrim($vars[1]),
+                //TODO special description?
                 'description' => $this->extractParenthis($genre)
             ];
         }
@@ -248,7 +291,7 @@ class WikiRuParser extends AbstractParser
                 }
 
                 //skip short stories
-                if ($rawBook['nomination'] == Category::SHORT_STORY) {
+                if (Category::isSkipped($rawBook['nomination'])) {
                     continue;
                 }
 
@@ -276,7 +319,7 @@ class WikiRuParser extends AbstractParser
 
         //RU wiki is sucks
         $result['books'][] = [
-            'category' => 1,
+            'category' => Category::ID_NOVEL,
             'year' => 2010,
             'ru' => [
               'name' => 'Чайна Мьевилль',

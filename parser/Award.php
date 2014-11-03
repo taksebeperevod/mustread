@@ -13,7 +13,7 @@ use Msnre\Parser\Parser;
 /**
  * @author Sergey Bondar
  */
-class ParserManager
+class Award
 {
     use Alarm;
 
@@ -31,31 +31,53 @@ class ParserManager
     protected $enWiki;
 
     /**
+     * @param Authors $authors
      * @constructor
      */
-    public function __construct() {
-        $this->authors = new Authors();
+    public function __construct(Authors $authors) {
+        $this->authors = $authors;
         $this->ruWiki = new Parser\WikiRuParser();
         $this->enWiki = new Parser\WikiEnParser();
     }
 
     /**
-     * @return mixed
+     * @return array
      */
-    public function getBooks() {
-        $self = $this;
-        $cache = new Cache('hugo', function() use ($self) {
-                return $self->getHugo();
-            });
-        $hugo = $cache->get();
+    public function getClarke()
+    {
+        $categories = Category::getCategories();
 
-        $self = $this;
-        $cache = new Cache('nebula', function() use ($self) {
-                return $self->getNebula();
+        $ruWiki = $this->ruWiki;
+        $cache = new Cache(null, function() use ($ruWiki, $categories) {
+                return $ruWiki->getClarke($categories);
             });
-        $nebula = $cache->get();
+        $ruBooks = $cache->get();
 
-        return $nebula;
+        $enWiki = $this->enWiki;
+        $cache = new Cache('clarkeEn', function() use ($enWiki, $categories) {
+                return $enWiki->getClarke($categories);
+            });
+        $enBooks = $cache->get();
+
+        $this->authors->collectAuthorsByEnTitleAndPopulate($ruBooks, $enBooks);
+
+        //TODO merge
+        $books = $ruBooks;
+
+        return (object) [
+            'title' => (object) [
+                'ru' => 'Премия Артура Кларка',
+                'en' => 'Arthur C. Clarke Award'
+            ],
+            'founder' => 'British Science Fiction Association',
+            'site' => 'http://www.clarkeaward.com/',
+            'link' => (object) [
+                'ru' => 'http://ru.wikipedia.org/wiki/%D0%9D%D0%B5%D0%B1%D1%8C%D1%8E%D0%BB%D0%B0',
+                'en' => 'http://en.wikipedia.org/wiki/Locus_Award'
+            ],
+            'books' => $books,
+            'categories' => Category::getClarkeCategories()
+        ];
     }
 
     /**
@@ -63,27 +85,37 @@ class ParserManager
      */
     public function getNebula()
     {
-        $self = $this;
-
-        //TODO Category
         $categories = Category::getCategories();
 
-        $cache = new Cache('nebulaRu', function() use ($self, $categories) {
-                return $self->ruWiki->getNebula($categories);
+        $ruWiki = $this->ruWiki;
+        $cache = new Cache('nebulaRu', function() use ($ruWiki, $categories) {
+                return $ruWiki->getNebula($categories);
             });
         $ruBooks = $cache->get();
 
-        $cache = new Cache('nebulaEn', function() use ($self, $categories) {
-                return $self->enWiki->getNebula($categories);
+        $enWiki = $this->enWiki;
+        $cache = new Cache('nebulaEn', function() use ($enWiki, $categories) {
+                return $enWiki->getNebula($categories);
             });
         $enBooks = $cache->get();
 
+        $this->authors->collectAuthorsByEnTitleAndPopulate($ruBooks, $enBooks);
+
+        //TODO merge
+        $books = $ruBooks;
+
         return (object) [
-            'link' => [
+            'title' => (object) [
+                'ru' => 'Небьюла',
+                'en' => 'Nebula Award'
+            ],
+            'founder' => 'Science Fiction and Fantasy Writers of America',
+            'site' => 'http://www.sfwa.org/nebula-awards/',
+            'link' => (object) [
                 'ru' => 'http://ru.wikipedia.org/wiki/%D0%9D%D0%B5%D0%B1%D1%8C%D1%8E%D0%BB%D0%B0',
                 'en' => 'http://en.wikipedia.org/wiki/Nebula_Award'
             ],
-            'books' => $ruBooks,
+            'books' => $books,
             'categories' => $categories
         ];
     }
@@ -94,13 +126,13 @@ class ParserManager
     public function getHugo()
     {
         $self = $this;
+        $categories = Category::getCategories();
 
-        $cache = new Cache('hugoRu', function() use ($self) {
-                return $self->ruWiki->getHugo();
+        $cache = new Cache('hugoRu', function() use ($self, $categories) {
+                return $self->ruWiki->getHugo($categories);
             });
         $ruBooks = $cache->get();
 
-        $categories = $ruBooks->categories;
         $cache = new Cache('hugoEn', function() use ($self, $categories) {
                 return $self->enWiki->getHugo($categories);
             });
@@ -109,7 +141,13 @@ class ParserManager
         $books = $this->mergeBooksByTitle($ruBooks, $enBooks);
 
         return (object) [
-            'link' => [
+            'title' => (object) [
+                'ru' => 'Хьюго',
+                'en' => 'Hugo Award'
+            ],
+            'founder' => 'World Science Fiction Society',
+            'site' => 'http://www.thehugoawards.org/',
+            'link' => (object) [
                 'ru' => 'http://ru.wikipedia.org/wiki/%D0%A5%D1%8C%D1%8E%D0%B3%D0%BE',
                 'en' => 'http://en.wikipedia.org/wiki/Hugo_Award'
             ],

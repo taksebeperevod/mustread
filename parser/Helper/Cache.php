@@ -8,6 +8,13 @@ namespace Msnre\Parser\Helper;
 class Cache
 {
     /**
+     * @var array ONLY DEBUG
+     */
+    protected $skipCaches = [
+        'clarke'
+    ];
+
+    /**
      * @var string
      */
     protected $path = '/../json/';
@@ -25,6 +32,12 @@ class Cache
      * @param callable
      */
     public function __construct($name = null, callable $function = null) {
+        foreach ($this->skipCaches as $skip) {
+            if (preg_match('/' . $skip . '/', $name)) {
+                $name = null;
+            }
+        }
+
         $this->filename = $name ? (__DIR__ . $this->path . $name . '.json') : null;
         if (!$name) {
             $this->tmp = $function();

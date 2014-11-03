@@ -2,6 +2,7 @@
 
 namespace Msnre\Parser\Parser;
 
+use Msnre\Parser\Helper\Category;
 use Symfony\Component\DomCrawler\Crawler;
 use SleepingOwl\Apist\Apist;
 
@@ -24,16 +25,10 @@ class WikiEnParser extends AbstractParser
      */
     public function getHugo($categories)
     {
-        //TODO Best All-Time Series	1966	Series of works
-        $cats = [
-            'Novel' => '/wiki/Hugo_Award_for_Best_Novel',
-            'Novella' => '/wiki/Hugo_Award_for_Best_Novella',
-            'Novellette' => '/wiki/Hugo_Award_for_Best_Novelette',
-            //'Short story' => '/wiki/Hugo_Award_for_Best_Short_Story'
-        ];
+        $cats = Category::getHugoEnCategories();
 
         $urls = $this->mapCategoryUrls($categories, $cats, 'en');
-        return $this->getCategories($urls);
+        return $this->parseWinnerTableCategories($urls);
     }
 
     /**
@@ -42,23 +37,33 @@ class WikiEnParser extends AbstractParser
      */
     public function getNebula($categories)
     {
-        $cats = [
-            'Novel' => '/wiki/Nebula_Award_for_Best_Novel',
-            'Novella' => '/wiki/Nebula_Award_for_Best_Novella',
-            'Novellette' => '/wiki/Nebula_Award_for_Best_Novelette',
-            //'Short story' => '/wiki/Nebula_Award_for_Best_Short_Story'
-        ];
+        $cats = Category::getNebulaEnCategories();
 
         $urls = $this->mapCategoryUrls($categories, $cats, 'en');
-        return $this->getCategories($urls);
+        return $this->parseWinnerTableCategories($urls);
     }
 
+    /**
+     * @param array
+     * @return array
+     */
+    public function getClarke($categories)
+    {
+        $cats = Category::getClarkeEnCategories();
 
-    protected function getCategories($urls) {
+        $urls = $this->mapCategoryUrls($categories, $cats, 'en');
+        return $this->parseWinnerTableCategories($urls);
+    }
+
+    /**
+     * @param array
+     * @return array
+     */
+    protected function parseWinnerTableCategories($urls) {
         $books = [];
 
         foreach ($urls as $category => $url) {
-            $parsed = $this->getWikiCategory($url, $category);
+            $parsed = $this->parseWinnerTable($url, $category);
             $books = array_merge($books, $parsed);
         }
 
@@ -70,7 +75,7 @@ class WikiEnParser extends AbstractParser
      * @param int
      * @return array
      */
-    public function getWikiCategory($url, $category)
+    public function parseWinnerTable($url, $category)
     {
         $parsed = $this->get($url, [
             'award' => Apist::filter('.wikitable')->each([
@@ -88,7 +93,15 @@ class WikiEnParser extends AbstractParser
                         if(!$nameEl->children()->count()) {
                             $name = $nameEl->text();
                         } else {
-                            $name = $nameEl->children()->eq($nameEl->children()->count() - 1)->text();
+                            $eqKey = $nameEl->children()->count() - 1;
+
+                            //sometimes i>span+a, sometimes span+span->a
+                            if ($nameEl->children()->eq($eqKey)->children()->count() > 1) {
+                                $nameEl = $nameEl->children()->eq($eqKey);
+                                $eqKey = $nameEl->children()->count() - 1;
+                            }
+
+                            $name = $nameEl->children()->eq($eqKey)->text();
                         }
                         if(preg_match('/Mule/', $name)) {
                             $name = str_replace('Mule !', '', $name);
