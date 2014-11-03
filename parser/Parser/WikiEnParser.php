@@ -29,7 +29,7 @@ class WikiEnParser extends AbstractParser
             'Novel' => '/wiki/Hugo_Award_for_Best_Novel',
             'Novella' => '/wiki/Hugo_Award_for_Best_Novella',
             'Novellette' => '/wiki/Hugo_Award_for_Best_Novelette',
-            'Short story' => '/wiki/Hugo_Award_for_Best_Short_Story'
+            //'Short story' => '/wiki/Hugo_Award_for_Best_Short_Story'
         ];
 
         $urls = $this->mapCategoryUrls($categories, $cats, 'en');
@@ -46,7 +46,7 @@ class WikiEnParser extends AbstractParser
             'Novel' => '/wiki/Nebula_Award_for_Best_Novel',
             'Novella' => '/wiki/Nebula_Award_for_Best_Novella',
             'Novellette' => '/wiki/Nebula_Award_for_Best_Novelette',
-            'Short story' => '/wiki/Nebula_Award_for_Best_Short_Story'
+            //'Short story' => '/wiki/Nebula_Award_for_Best_Short_Story'
         ];
 
         $urls = $this->mapCategoryUrls($categories, $cats, 'en');

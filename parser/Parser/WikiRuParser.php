@@ -5,6 +5,8 @@ namespace Msnre\Parser\Parser;
 use Symfony\Component\DomCrawler\Crawler;
 use SleepingOwl\Apist\Apist;
 
+use Msnre\Parser\Helper\Category;
+
 /**
  * @author Sergey Bondar
  */
@@ -28,7 +30,7 @@ class WikiRuParser extends AbstractParser
             'Роман' => '/wiki/Премия_«Небьюла»_за_лучший_роман',
             'Повесть' => '/wiki/Премия_«Небьюла»_за_лучшую_повесть',
             'Короткая повесть' => '/wiki/Премия_«Небьюла»_за_лучшую_короткую_повесть',
-            'Рассказ' => '/wiki/Премия_«Небьюла»_за_лучший_рассказ'
+            //'Рассказ' => '/wiki/Премия_«Небьюла»_за_лучший_рассказ'
         ];
 
         $urls = $this->mapCategoryUrls($categories, $cats, 'ru');
@@ -242,6 +244,11 @@ class WikiRuParser extends AbstractParser
         foreach ($hugo['awards'] as $award) {
             foreach ($award['books'] as $rawBook) {
                 if (!$rawBook) {
+                    continue;
+                }
+
+                //skip short stories
+                if ($rawBook['nomination'] == Category::SHORT_STORY) {
                     continue;
                 }
 

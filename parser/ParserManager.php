@@ -5,6 +5,7 @@ namespace Msnre\Parser;
 use Msnre\Parser\Helper\Cache;
 use Msnre\Parser\Helper\Authors;
 use Msnre\Parser\Helper\Alarm;
+use Msnre\Parser\Helper\Category;
 
 use Msnre\Parser\Parser;
 
@@ -64,12 +65,7 @@ class ParserManager
         $self = $this;
 
         //TODO Category
-        $categories = [
-            1 => ['en' => 'Novel', 'ru' => 'Роман'],
-            2 => ['en' => 'Novella', 'ru' => 'Повесть'],
-            3 => ['en' => 'Novellette', 'ru' => 'Короткая повесть'],
-            4 => ['en' => 'Short story', 'ru' => 'Рассказ']
-        ];
+        $categories = Category::getCategories();
 
         $cache = new Cache('nebulaRu', function() use ($self, $categories) {
                 return $self->ruWiki->getNebula($categories);
