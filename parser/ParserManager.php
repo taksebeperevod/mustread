@@ -6,6 +6,7 @@ use Msnre\Parser\Helper\Cache;
 use Msnre\Parser\Helper\Authors;
 use Msnre\Parser\Helper\Alarm;
 use Msnre\Parser\Helper\Category;
+use Msnre\Parser\Helper\Book;
 
 use Msnre\Parser\Parser;
 
@@ -132,7 +133,7 @@ class ParserManager
                     continue;
                 }
 
-                if($this->isSameBook($ru->en, $en)) {
+                if(Book::isSameBook($ru->en, $en)) {
                     $book = (object) [
                         'isWinner' => $en->isWinner,
                         'year' => intval($en->year),
@@ -176,72 +177,6 @@ class ParserManager
         };
 
         return $books;
-    }
-
-    //TODO Books
-    /**
-     * @param string
-     * @return string
-     */
-    protected function prepareBookTitle($title) {
-        $title = str_replace('...', '', $title);
-        $title = str_replace('«', '', $title);
-        $title = str_replace('»', '', $title);
-        $title = str_replace('’', '', $title);
-        $title = str_replace('\'', '', $title);
-        $title = str_replace('ö', 'e', $title);
-        $title = str_replace('é', 'e', $title);
-        $title = str_replace('&amp;', '&', $title);
-        $title = preg_replace('/^A /', '', $title);
-        $title = preg_replace('/^The /', '', $title);
-        $title = preg_replace('/series$/', '', $title);
-        $title = preg_replace('/^([^:]+):.+$/', '$1', $title);
-        $title = preg_replace('/s$/', '', $title);
-        $title = preg_replace('/[^A-Za-z0-9 ]/', '', $title);
-        $title = strtolower($title);
-        return trim($title);
-    }
-
-    /**
-     * @param array
-     * @param array
-     * @return bool
-     */
-    protected function isSameBook($a, $b) {
-        $aName = $this->prepareBookTitle($a->name);
-        $bName = $this->prepareBookTitle($b->name);
-
-        if( $aName == $bName ) {
-            return true;
-        }
-
-        $aAuthor = $this->prepareBookTitle($a->author);
-        $bAuthor = $this->prepareBookTitle($b->author);
-        if ($aAuthor != $bAuthor) {
-            return false;
-        }
-
-        $aParts = explode(' ', $aName);
-        if (count($aParts) == 1) {
-            return false;
-        }
-        $aFirst = $aParts[0];
-        $aLast = $aParts[count($aParts) - 1];
-
-        $bParts = explode(' ', $bName);
-        $bFirst = $bParts[0];
-        $bLast = $bParts[count($bParts) - 1];
-
-        if ($aFirst == $bFirst) {
-            return true;
-            //echo $aFirst . " " . $bFirst . "! " . $aName . "({$a->author})" . "=" . $bName . "({$b->author})" . "<br><br>";
-        }
-
-        if ($aLast == $bLast) {
-            return true;
-            //echo $aLast . " " . $bLast . "! " . $aName  . "({$a->author})" . "=" . $bName . "({$b->author})"  . "<br><br>";
-        }
-        return false;
     }
 
 }
