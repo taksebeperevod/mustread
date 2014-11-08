@@ -61,8 +61,119 @@ class Award
 
         $this->authors->collectAuthorsByEnTitleAndPopulate($ruBooks, $enBooks);
 
-        //TODO merge
-        $books = $ruBooks;
+        $this->authors->fixAuthors($ruBooks);
+        $this->authors->collectAuthors($ruBooks);
+        foreach($ruBooks as $ruKey => $ru) {
+            if (!$ru->en->author) {
+                $ru->en->author = $this->authors->getEnglishAuthor($ru->ru->author);
+            }
+        }
+
+        foreach($enBooks as $enKey => $en) {
+            if($en->category == Category::ID_NOVEL) {
+                continue;
+            }
+            if (!$en->author) {
+                continue;
+            }
+
+            $books[] = (object) [
+                'year' => $en->year,
+                'isWinner' => $en->isWinner,
+                'nomination' => $en->category,
+                'genre' => $en->genre,
+                'ru' => (object) [
+                    'author' => $this->authors->getRussianAuthor($en->author),
+                    'name' => null
+                ],
+                'en' => (object) [
+                    'author' => $en->author,
+                    'name' => $en->name
+                ]
+            ];
+            unset($enBooks[$enKey]);
+        }
+
+        $books = [];
+        foreach($ruBooks as $ruKey => $ru) {
+            if ($ru->ru->name) {
+                continue;
+            }
+
+            foreach($enBooks as $enKey => $en) {
+                if($en->year != $ru->year OR $en->genre != $ru->genre) {
+                    continue;
+                }
+                if ($en->name == $ru->en->name) {
+                    $books[] = (object) [
+                        'year' => $ru->year,
+                        'isWinner' => $en->isWinner,
+                        'nomination' => $ru->category,
+                        'genre' => $ru->genre,
+                        'ru' => (object) [
+                            'author' => $ru->ru->author,
+                            'name' => $ru->ru->name
+                        ],
+                        'en' => (object) [
+                            'author' => $en->author,
+                            'name' => $en->name
+                        ]
+                    ];
+                    unset($ruBooks[$ruKey]);
+                    unset($enBooks[$enKey]);
+                    continue(2);
+                }
+            }
+        }
+
+        //TODO authors!!1
+        foreach($ruBooks as $ruKey => $ru) {
+            if (!$ru->en->name && $ru->isWinner) {
+                continue;
+            }
+            $books[] = (object) [
+                'year' => $ru->year,
+                'isWinner' => $ru->isWinner,
+                'nomination' => $ru->category,
+                'genre' => $ru->genre,
+                'ru' => (object) [
+                    'author' => $ru->ru->author,
+                    'name' => $ru->ru->name
+                ],
+                'en' => (object) [
+                    'author' => $ru->en->author,
+                    'name' => $ru->en->name
+                ]
+            ];
+            unset($ruBooks[$ruKey]);
+        }
+
+        foreach($ruBooks as $ruKey => $ru) {
+            foreach($enBooks as $enKey => $en) {
+                if($en->year != $ru->year OR $en->genre != $ru->genre) {
+                    continue;
+                }
+
+                $books[] = (object) [
+                    'year' => $ru->year,
+                    'isWinner' => $en->isWinner,
+                    'nomination' => $ru->category,
+                    'genre' => $ru->genre,
+                    'ru' => (object) [
+                        'author' => $ru->ru->author,
+                        'name' => $ru->ru->name
+                    ],
+                    'en' => (object) [
+                        'author' => $en->author,
+                        'name' => $en->name
+                    ]
+                ];
+                unset($ruBooks[$ruKey]);
+                unset($enBooks[$enKey]);
+                continue(2);
+            }
+        }
+
 
         return (object) [
             'title' => (object) [

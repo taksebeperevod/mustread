@@ -70,8 +70,12 @@ class Category
                 'fantasy' => '/wiki/Locus_Award_for_Best_Fantasy_Novel',
                 'debut' => '/wiki/Locus_Award_for_Best_First_Novel',
             ],
-            self::ID_NOVELLA => '/wiki/Locus_Award_for_Best_Novella',
-            self::ID_NOVELLETTE => '/wiki/Locus_Award_for_Best_Novelette',
+            self::ID_NOVELLA => [
+                'best' => '/wiki/Locus_Award_for_Best_Novella'
+            ],
+            self::ID_NOVELLETTE => [
+                'best' => '/wiki/Locus_Award_for_Best_Novelette'
+            ],
             //self::ID_SHORT_STORY => '/wiki/Locus_Award_for_Best_Short_Story'
         ];
     }

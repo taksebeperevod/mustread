@@ -89,6 +89,7 @@ class WikiEnParser extends AbstractParser
                                     } else {
                                         $name = $nameEl->text();
                                     }
+                                    $name = preg_replace('/\s+\(Tie\)/', '', $name);
                                     $name = $this->trimQuotes($name);
 
                                     $authorEl = $node->children()->eq($offset + 1);
@@ -98,6 +99,9 @@ class WikiEnParser extends AbstractParser
                                         $author = $authorEl->text();
                                     }
                                 }
+                                //EN wiki is sucks
+
+                                $name = str_replace('The Baroque Cycle (i.e. Quicksilver; The Confusion; The System of the World)', 'The Confusion', $name);
 
                                 return [
                                     'isWinner' => true,

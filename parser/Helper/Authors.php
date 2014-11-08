@@ -11,10 +11,13 @@ class Authors
 
     use Saveable;
 
+    //TODO 'Gregory D. Bear' => 'Грег Бир', БЕАР
+    //'James Corey' => 'Джеймс Кори', 'Daniel Abraham' => 'Дэниел Абрахам', (один и тот же человек? https://www.google.ru/url?sa=t&rct=j&q=&esrc=s&source=web&cd=13&cad=rja&uact=8&ved=0CFAQFjAM&url=http%3A%2F%2Fimhonet.ru%2Fperson%2F224015%2Frole%2F100%2F&ei=bpJeVM3tEsStPJ3ugfgF&usg=AFQjCNF1iEyCWotK5gwjcsbfNjMMBt1_Gw&sig2=R2RcCr_P8Ym7yfEO83_Dlg)
     /**
      * @var array
      */
-    protected $mapped = [];
+    protected $mapped = [
+    ];
 
     /**
      * @var array
@@ -35,12 +38,30 @@ class Authors
             $this->saveData($this->mapped);
         }
         $savedMap = $this->getData($isAssoc = true);
-        $this->mapped = $savedMap;
+        $tmp = [];
+        foreach ($this->mapped as $key => $value) {
+            if (!$key || !$value) {
+                continue;
+            }
+            $tmp[$key] = $value;
+        }
+        $this->mapped = $tmp;
+        $this->mapped = array_merge($this->mapped, $savedMap);
     }
 
     /**
      */
     public function save() {
+        foreach ($this->mapped as $en => $ru) {
+            if (preg_match('/[^A-Za-zé. -]/u', $en)) {
+                var_dump($en, $this->mapped);
+                throw new \Exception('Something wrong with authors!');
+            }
+            if (preg_match('/[^А-Яа-яЁёЙй. -]/u', $ru)) {
+                var_dump($ru, preg_replace('/[А-Яа-яЁёЙй. -]/u', '', $ru), $this->mapped);
+                throw new \Exception('Something wrong with authors!');
+            }
+        }
         $this->saveData($this->mapped);
     }
 
@@ -60,7 +81,7 @@ class Authors
                 $collection[$key]->ru->author = $ruA;
             }
 
-            $enA = $h->ru->author;
+            $enA = $h->en->author;
             if ($enA) {
                 $enA = str_replace('ł', 'l', $enA);
                 $collection[$key]->en->author = $enA;
@@ -173,6 +194,7 @@ class Authors
                 $this->mapped[$key] = $value;
             }
         }
+
     }
 
     /**
@@ -180,6 +202,18 @@ class Authors
      * @return mixed
      */
     protected function removeSecondName($ruA) {
+        if ($ruA == 'Иен Макдональд') {
+            return 'Йен Макдональд';
+        }
+        if ($ruA == 'Жаклин Кари') {
+            return 'Жаклин Кэри';
+        }
+        if ($ruA == 'Ким Стенли Робинсон') {
+            return 'Ким Стэнли Робинсон';
+        }
+        if ($ruA == 'Вернор Виндж') {
+            return 'Вернон Виндж';
+        }
         //Ru Wiki is sucks Пол. Дж. Макоули
         //Д. Дж.
         return preg_replace('/([А-Я][а-я]+)\.?\s[А-Я][а-я]?\.\s([А-Я][а-я]+)/u', '$1 $2', $ruA);
@@ -190,6 +224,9 @@ class Authors
      * @return mixed
      */
     protected function removeSecondNameEn($enA) {
+        if ($enA == 'China Mieville') {
+            $enA = 'China Miéville';
+        }
         //Ru Wiki is sucks Пол. Дж. Макоули
         //Д. Дж.
         //$enA = preg_replace('/^[A-Z]\.\s([A-Z][a-z]+)/u', '$1', $enA);

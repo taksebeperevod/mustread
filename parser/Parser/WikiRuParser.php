@@ -38,8 +38,8 @@ class WikiRuParser extends AbstractParser
                         $parsed = $this->parseLocusTables($url, $category);
                     }
 
-                    foreach($parsed as $key => $value) {
-                        $parsed[$key]->genre = $genre;
+                    foreach($parsed as $someKey => $value) {
+                        $parsed[$someKey]->genre = $genre;
                     }
 
                     $books = array_merge($books, $parsed);
@@ -277,7 +277,9 @@ class WikiRuParser extends AbstractParser
                         }
 
                         $ruName = $this->stripTrim($ruName->html());
-                        $ruName = str_replace('»/«', '', $ruName);
+                        $ruName = str_replace('»/«', '/', $ruName);
+                        $ruName = str_replace('» / «', '/', $ruName);
+                        $ruName = preg_replace('/[„“]/u', '"', $ruName);
                         $ruName = $this->trimQuotes($ruName);
                         if (!preg_match('/[А-Яа-я]/u', $ruName) AND preg_match('/[A-Za-z]/', $ruName)) {
                             $enName = $ruName;
