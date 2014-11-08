@@ -458,29 +458,29 @@ class WikiRuParser extends AbstractParser
                 $book = [
                     'category' => $rawBook['nomination'],
                     'year' => $rawBook['year'],
-                    'ru' => $rawBook['ru'],
-                    'en' => $rawBook['en']
+                    'ru' => (object) $rawBook['ru'],
+                    'en' => (object) $rawBook['en']
                 ];
 
-                $result['books'][] = $book;
+                $result['books'][] = (object) $book;
             }
         }
 
         //RU wiki is sucks
-        $result['books'][] = [
+        $result['books'][] = (object) [
             'category' => Category::ID_NOVEL,
             'year' => 2010,
-            'ru' => [
+            'ru' => (object) [
               'name' => 'Чайна Мьевилль',
               'author' => 'Город и город'
             ],
-            'en' => [
+            'en' => (object) [
                 'name' => 'The City & the City',
                 'author' => 'China Miéville'
             ]
         ];
 
-        return $result;
+        return (object) $result;
     }
 }
 

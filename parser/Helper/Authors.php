@@ -17,6 +17,11 @@ class Authors
      * @var array
      */
     protected $mapped = [
+        'Ann Leckie' => 'Энн Леки',
+        'Kameron Hurley' => 'Камерон Херли',
+        'Phillip Mann' => 'Филипп Манн',
+        'James Smythe' => 'Джеймс Смайт',
+        'Ramez Naam' => 'Рамез Наам'
     ];
 
     /**
@@ -53,12 +58,15 @@ class Authors
      */
     public function save() {
         foreach ($this->mapped as $en => $ru) {
-            if (preg_match('/[^A-Za-zé. -]/u', $en)) {
+            if (preg_match('/[^A-Za-zé, . -]/u', $en)) {
                 var_dump($en, $this->mapped);
                 throw new \Exception('Something wrong with authors!');
             }
             if (preg_match('/[^А-Яа-яЁёЙй. -]/u', $ru)) {
-                var_dump($ru, preg_replace('/[А-Яа-яЁёЙй. -]/u', '', $ru), $this->mapped);
+                var_dump($ru, preg_replace('/[А-Яа-яЁёЙй.   -]/u', '', $ru), $this->mapped);
+                foreach ($this->mapped as $e => $r) {
+                    echo '"' . $e . '" => "'.$r.'"<br>';
+                }
                 throw new \Exception('Something wrong with authors!');
             }
         }
@@ -84,6 +92,7 @@ class Authors
             $enA = $h->en->author;
             if ($enA) {
                 $enA = str_replace('ł', 'l', $enA);
+                $enA = $this->removeSecondNameEn($enA);
                 $collection[$key]->en->author = $enA;
             }
         }
@@ -214,6 +223,15 @@ class Authors
         if ($ruA == 'Вернор Виндж') {
             return 'Вернон Виндж';
         }
+        if ($ruA == 'К. У. Джетер') {
+            $ruA = 'Кевин Джетер';
+        }
+        if ($ruA == 'Пат Мёрфи') {
+            $ruA = 'Пат Мерфи';
+        }
+        if ($ruA == 'Джон Кортней Гримвуд') {
+            $ruA = 'Джон Кортни Гримвуд';
+        }
         //Ru Wiki is sucks Пол. Дж. Макоули
         //Д. Дж.
         return preg_replace('/([А-Я][а-я]+)\.?\s[А-Я][а-я]?\.\s([А-Я][а-я]+)/u', '$1 $2', $ruA);
@@ -223,9 +241,18 @@ class Authors
      * @param string
      * @return mixed
      */
-    protected function removeSecondNameEn($enA) {
+    public function removeSecondNameEn($enA) {
         if ($enA == 'China Mieville') {
             $enA = 'China Miéville';
+        }
+        if ($enA == 'K. W. Jeter') {
+            $enA = 'Kevin Jeter';
+        }
+        if ($enA == 'Gregory D. Bear') {
+            $enA = 'Greg Bear';
+        }
+        if ($enA == 'Iain M. Banks') {
+            $enA = 'Iain Banks';
         }
         //Ru Wiki is sucks Пол. Дж. Макоули
         //Д. Дж.

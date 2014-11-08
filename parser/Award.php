@@ -63,12 +63,14 @@ class Award
 
         $this->authors->fixAuthors($ruBooks);
         $this->authors->collectAuthors($ruBooks);
+
         foreach($ruBooks as $ruKey => $ru) {
             if (!$ru->en->author) {
                 $ru->en->author = $this->authors->getEnglishAuthor($ru->ru->author);
             }
         }
 
+        $books = [];
         foreach($enBooks as $enKey => $en) {
             if($en->category == Category::ID_NOVEL) {
                 continue;
@@ -94,7 +96,6 @@ class Award
             unset($enBooks[$enKey]);
         }
 
-        $books = [];
         foreach($ruBooks as $ruKey => $ru) {
             if ($ru->ru->name) {
                 continue;
@@ -126,7 +127,6 @@ class Award
             }
         }
 
-        //TODO authors!!1
         foreach($ruBooks as $ruKey => $ru) {
             if (!$ru->en->name && $ru->isWinner) {
                 continue;
@@ -213,7 +213,113 @@ class Award
         $this->authors->collectAuthorsByEnTitleAndPopulate($ruBooks, $enBooks);
 
         //TODO merge
-        $books = $ruBooks;
+        $books = [];
+
+        $this->authors->fixAuthors($books);
+        $this->authors->collectAuthors($books);
+
+        foreach($ruBooks as $ruKey => $ru) {
+            if (!$ru->en->author) {
+                $ru->en->author = $this->authors->getEnglishAuthor($ru->ru->author);
+            }
+        }
+
+        foreach($ruBooks as $ruKey => $ru) {
+            if ($ru->ru->name) {
+                continue;
+            }
+
+            foreach($enBooks as $enKey => $en) {
+                if($en->year != $ru->year OR $en->category != $ru->category) {
+                    continue;
+                }
+                if ($en->name == $ru->en->name) {
+                    $books[] = (object) [
+                        'year' => $ru->year,
+                        'isWinner' => $en->isWinner,
+                        'nomination' => $ru->category,
+                        'ru' => (object) [
+                            'author' => $ru->ru->author,
+                            'name' => $ru->ru->name
+                        ],
+                        'en' => (object) [
+                            'author' => $en->author,
+                            'name' => $en->name
+                        ]
+                    ];
+                    unset($ruBooks[$ruKey]);
+                    unset($enBooks[$enKey]);
+                    continue(2);
+                }
+            }
+        }
+
+        foreach($ruBooks as $ruKey => $ru) {
+            foreach($enBooks as $enKey => $en) {
+                if($en->year != $ru->year OR $en->category != $ru->category) {
+                    continue;
+                }
+                $en->author = $this->authors->removeSecondNameEn($en->author);
+                if ($en->author == $ru->en->author) {
+                    $books[] = (object) [
+                        'year' => $ru->year,
+                        'isWinner' => $en->isWinner,
+                        'nomination' => $ru->category,
+                        'ru' => (object) [
+                            'author' => $ru->ru->author,
+                            'name' => $ru->ru->name
+                        ],
+                        'en' => (object) [
+                            'author' => $en->author,
+                            'name' => $en->name
+                        ]
+                    ];
+                    unset($ruBooks[$ruKey]);
+                    unset($enBooks[$enKey]);
+                    continue(2);
+                }
+            }
+        }
+        foreach($enBooks as $enKey => $en) {
+            $books[] = (object) [
+                'year' => $en->year,
+                'isWinner' => $en->isWinner,
+                'nomination' => $en->category,
+                'ru' => (object) [
+                    'author' => $this->authors->getRussianAuthor($en->author),
+                    'name' => null
+                ],
+                'en' => (object) [
+                    'author' => $en->author,
+                    'name' => $en->name
+                ]
+            ];
+            unset($enBooks[$enKey]);
+        }
+
+//        foreach($books as $ru) {
+//            echo '!' . $ru->year . ' ';
+//            echo $ru->ru->author . "-" . $ru->ru->name . " ~ " . $ru->en->author . "-" . $ru->en->name;
+//            echo '<br>';
+//        }
+//        echo '<br><br><br><br>==============<br><br><br><br>';
+//        foreach($ruBooks as $ru) {
+//            echo '!' . $ru->year . ' ';
+//            echo $ru->ru->author . "-" . $ru->ru->name . " ~ " . $ru->en->author . "-" . $ru->en->name;
+////            var_dump($ru->isWinner);
+//            echo '<br>';
+//        }
+//        echo '<br><br><br><br>==============<br><br><br><br>';
+//        foreach($enBooks as $en) {
+//            echo '!' . $en->year . ' ';
+//            echo $en->author . "-" . $en->name;
+////            var_dump($ru->isWinner);
+//            echo '<br>';
+//        }
+//        echo '<br><br><br><br>==============<br><br><br><br>';
+//
+////        die();
+
 
         return (object) [
             'title' => (object) [
@@ -323,6 +429,9 @@ class Award
                 }
 
                 if(Book::isSameBook($ru->en, $en)) {
+                    if (!trim($en->name)) {
+                        var_dump($ru);
+                    }
                     $book = (object) [
                         'isWinner' => $en->isWinner,
                         'year' => intval($en->year),

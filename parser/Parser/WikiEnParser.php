@@ -227,11 +227,15 @@ class WikiEnParser extends AbstractParser
                             return null;
                         }
 
+                        $author = $td->eq(1 + $offset)->children()->eq(1)->text();
+                        $author = str_replace('ł', 'l', $author);
+                        $author = $this->cleanParenthis($author);
+
                         return [
                             'isWinner' => $style && preg_match('/background/', $style),
                             'year' => $td->eq(0)->children()->eq(1)->text(),
                             'category' => $category,
-                            'author' => $td->eq(1 + $offset)->children()->eq(1)->text(),
+                            'author' => $author,
                             'name' => $name,
                             'publisher' => trim(preg_replace('/!.+/', '', $td->eq(3 + $offset)->text()))
                         ];

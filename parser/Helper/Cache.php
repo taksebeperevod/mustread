@@ -13,7 +13,7 @@ class Cache
      * @var array ONLY DEBUG
      */
     protected $skipCaches = [
-        'prometheus'
+        'prometheus', 'clarke'
     ];
 
     /**

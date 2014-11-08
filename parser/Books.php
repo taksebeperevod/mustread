@@ -54,7 +54,7 @@ class Books
         $cache = new Cache('locus', function() use ($manager) {
                 return $manager->getLocus();
             });
-        $clarke = $cache->getData();
+        $locus = $cache->getData();
 
         $books = $clarke;
 
