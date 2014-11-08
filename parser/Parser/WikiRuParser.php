@@ -31,14 +31,18 @@ class WikiRuParser extends AbstractParser
         $books = [];
         foreach ($cats as $category => $sets) {
             foreach ($sets as $key => $urls) {
-                foreach ($urls as $url) {
+                foreach ($urls as $genre => $url) {
                     if ($key == 'pic') {
                         $parsed = $this->parseTableWithPictures($url, $category, ['offset' => 2, 'yearColumns' => 4]);
-                        $books = array_merge($books, $parsed);
                     } else {
                         $parsed = $this->parseLocusTables($url, $category);
-                        $books = array_merge($books, $parsed);
                     }
+
+                    foreach($parsed as $key => $value) {
+                        $parsed[$key]->genre = $genre;
+                    }
+
+                    $books = array_merge($books, $parsed);
                 }
             }
         }

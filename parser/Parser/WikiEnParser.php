@@ -30,8 +30,8 @@ class WikiEnParser extends AbstractParser
         $books = [];
         foreach ($categories as $category => $urls) {
             $urls = (array) $urls;
-            foreach ($urls as $url) {
-                $parsed = $this->parseLocusTables($url, $category);
+            foreach ($urls as $genre => $url) {
+                $parsed = $this->parseLocusTables($url, $genre, $category);
                 $books = array_merge($books, $parsed);
             }
         }
@@ -42,15 +42,16 @@ class WikiEnParser extends AbstractParser
     /**
      * @param string
      * @param int
+     * @param int
      * @return array
      */
-    protected function parseLocusTables($url, $category) {
+    protected function parseLocusTables($url, $genre, $category) {
         $headType = null;
         $year = null;
 
         $parsed = $this->get($url, [
                 'award' => Apist::filter('.wikitable')->eq(0)->each([
-                        'books' => Apist::filter('tr')->each(function (Crawler $node, $i) use ($category, $headType, $year) {
+                        'books' => Apist::filter('tr')->each(function (Crawler $node, $i) use ($category, $genre, $headType, $year) {
                                 static $headType;
                                 $head = $node->children()->eq(1)->text();
                                 if ($head == 'Winner') {
@@ -102,6 +103,7 @@ class WikiEnParser extends AbstractParser
                                     'isWinner' => true,
                                     'year' => $year,
                                     'category' => $category,
+                                    'genre' => $genre,
                                     'author' => $author,
                                     'name' => $name
                                 ];
