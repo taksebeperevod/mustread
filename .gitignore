@@ -1,7 +1,5 @@
 vendor
 
-parser/json/*.json
-
 .idea
 src/vendor/
 node_modules/

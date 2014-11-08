@@ -7,6 +7,8 @@ namespace Msnre\Parser\Helper;
  */
 class Cache
 {
+    use Saveable;
+
     /**
      * @var array ONLY DEBUG
      */
@@ -19,13 +21,9 @@ class Cache
      */
     protected $path = '/../json/';
     /**
-     * @var string
-     */
-    protected $filename;
-    /**
      * @var mixed
      */
-    protected $tmp;
+    protected $data;
 
     /**
      * @param string
@@ -38,50 +36,15 @@ class Cache
             }
         }
 
-        $this->filename = $name ? (__DIR__ . $this->path . $name . '.json') : null;
+        $this->setFilename($name);
+
         if (!$name) {
-            $this->tmp = $function();
+            $data = $function();
+            $this->setData($data);
         } elseif (!$this->isSaved()) {
             $data = $function();
-            $this->save($data);
+            $this->saveData($data);
         }
-    }
-
-    /**
-     * @param string
-     * @return bool
-     */
-    public function isSaved() {
-        if (!$this->filename) {
-            return false;
-        }
-        return file_exists($this->filename);
-    }
-
-    /**
-     * @param mixed
-     */
-    public function save($data) {
-        if (!$this->filename) {
-            return;
-        }
-
-        $f = fopen($this->filename, 'w');
-        $json = json_encode($data, JSON_UNESCAPED_UNICODE);
-        fwrite($f, $json);
-        fclose($f);
-    }
-
-    /**
-     * @return mixed
-     */
-    public function get() {
-        if (!$this->filename) {
-            return $this->tmp;
-        }
-
-        $json = file_get_contents($this->filename);
-        return json_decode($json);
     }
 
 }

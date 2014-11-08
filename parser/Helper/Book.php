@@ -35,7 +35,7 @@ trait Book
      * @param array
      * @return bool
      */
-    protected static function isSameBook($a, $b) {
+    public static function isSameBook($a, $b) {
         $aName = self::prepare($a->name);
         $bName = self::prepare($b->name);
 

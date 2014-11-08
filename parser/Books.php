@@ -39,24 +39,26 @@ class Books
         $cache = new Cache('hugo', function() use ($manager) {
                 return $manager->getHugo();
             });
-        $hugo = $cache->get();
+        $hugo = $cache->getData();
 
         $cache = new Cache('nebula', function() use ($manager) {
                 return $manager->getNebula();
             });
-        $nebula = $cache->get();
+        $nebula = $cache->getData();
 
         $cache = new Cache('clarke', function() use ($manager) {
                 return $manager->getClarke();
             });
-        $clarke = $cache->get();
+        $clarke = $cache->getData();
 
         $cache = new Cache('locus', function() use ($manager) {
                 return $manager->getLocus();
             });
-        $clarke = $cache->get();
+        $clarke = $cache->getData();
 
         $books = $clarke;
+
+        $this->authors->save();
 
         return $books;
     }

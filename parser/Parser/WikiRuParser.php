@@ -246,7 +246,7 @@ class WikiRuParser extends AbstractParser
                         //obsolete en/ru notes
                         if ($ruAuthor->children()->count() == 1) {
                             $ruAuthor = $ruAuthor->children()->eq(0);
-                            if (!$ruAuthor->attr('href')) {
+                            if (!$ruAuthor->attr('href') AND $ruAuthor->children()->count()) {
                                 $ruAuthor = $ruAuthor->children()->eq(0);
                             }
                         }

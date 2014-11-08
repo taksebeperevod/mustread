@@ -51,13 +51,13 @@ class Award
         $cache = new Cache('locusRu', function() use ($ruWiki, $categories) {
                 return $ruWiki->getLocus($categories);
             });
-        $ruBooks = $cache->get();
+        $ruBooks = $cache->getData();
 
         $enWiki = $this->enWiki;
         $cache = new Cache('locusEn', function() use ($enWiki, $categories) {
                 return $enWiki->getLocus($categories);
             });
-        $enBooks = $cache->get();
+        $enBooks = $cache->getData();
 
         $this->authors->collectAuthorsByEnTitleAndPopulate($ruBooks, $enBooks);
 
@@ -91,13 +91,13 @@ class Award
         $cache = new Cache('clarkeRu', function() use ($ruWiki, $categories) {
                 return $ruWiki->getClarke($categories);
             });
-        $ruBooks = $cache->get();
+        $ruBooks = $cache->getData();
 
         $enWiki = $this->enWiki;
         $cache = new Cache('clarkeEn', function() use ($enWiki, $categories) {
                 return $enWiki->getClarke($categories);
             });
-        $enBooks = $cache->get();
+        $enBooks = $cache->getData();
 
         $this->authors->collectAuthorsByEnTitleAndPopulate($ruBooks, $enBooks);
 
@@ -131,13 +131,13 @@ class Award
         $cache = new Cache('nebulaRu', function() use ($ruWiki, $categories) {
                 return $ruWiki->getNebula($categories);
             });
-        $ruBooks = $cache->get();
+        $ruBooks = $cache->getData();
 
         $enWiki = $this->enWiki;
         $cache = new Cache('nebulaEn', function() use ($enWiki, $categories) {
                 return $enWiki->getNebula($categories);
             });
-        $enBooks = $cache->get();
+        $enBooks = $cache->getData();
 
         $this->authors->collectAuthorsByEnTitleAndPopulate($ruBooks, $enBooks);
 
@@ -171,12 +171,12 @@ class Award
         $cache = new Cache('hugoRu', function() use ($self, $categories) {
                 return $self->ruWiki->getHugo($categories);
             });
-        $ruBooks = $cache->get();
+        $ruBooks = $cache->getData();
 
         $cache = new Cache('hugoEn', function() use ($self, $categories) {
                 return $self->enWiki->getHugo($categories);
             });
-        $enBooks = $cache->get();
+        $enBooks = $cache->getData();
 
         $books = $this->mergeBooksByTitle($ruBooks, $enBooks);
 
